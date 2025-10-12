@@ -1,14 +1,32 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
 	"net/http"
+	"os"
 
+	"github.com/FerMusicComposer/chirpy/internal/database"
 	"github.com/FerMusicComposer/chirpy/src/handlers"
+	"github.com/joho/godotenv"
+	_ "github.com/lib/pq"
 )
 
 func main() {
+	godotenv.Load()
+
+	dbUrl := os.Getenv("DB_URL")
+	db, err := sql.Open("postgres", dbUrl)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	dbQueries := database.New(db)
+	defer db.Close()
+
 	cfg := &handlers.ApiConfig{}
+	cfg.DbQueries = dbQueries
+
 	mux := http.NewServeMux()
 	server := &http.Server{
 		Addr:    ":8080",
@@ -19,6 +37,7 @@ func main() {
 	mux.Handle("/app/assets/", cfg.WithMetrics(http.HandlerFunc(handlers.ServeAppAssets)))
 	mux.HandleFunc("GET /api/healthz", handlers.GetHealthz)
 	mux.HandleFunc("POST /api/validate_chirp", handlers.ValidateChirp)
+	mux.HandleFunc("POST /api/user", cfg.CreateUser)
 	mux.HandleFunc("GET /admin/metrics", http.HandlerFunc(cfg.ServeMetrics))
 	mux.HandleFunc("POST /admin/reset", http.HandlerFunc(cfg.ResetMetrics))
 

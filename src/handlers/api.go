@@ -4,17 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"strings"
+	"time"
 )
-
-type chirp struct {
-	Body string `json:"body"`
-}
-
-type response struct {
-	Error *string `json:"error,omitempty"`
-	CleanedBody *string   `json:"cleaned_body,omitempty"`
-}
 
 func GetHealthz(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
@@ -29,32 +20,12 @@ func ValidateChirp(w http.ResponseWriter, r *http.Request) {
 	err := decoder.Decode(&newChirp)
 
 	if err != nil {
-		w.Header().Set("Content-Type", "application/json; charset=utf-8")
-		w.Header().Set("Cache-Control", "no-cache")
-		w.WriteHeader(http.StatusBadRequest)
-		errMsg := "something went wrong"
-		res, err := json.Marshal(response{Error: &errMsg})
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			fmt.Println(err)
-			return
-		}
-		w.Write(res)
+		handleRequestErrors(w, "invalid json", http.StatusBadRequest)
 		return
 	}
 
 	if len(newChirp.Body) > 140 {
-		w.Header().Set("Content-Type", "application/json; charset=utf-8")
-		w.Header().Set("Cache-Control", "no-cache")
-		w.WriteHeader(http.StatusBadRequest)
-		errMsg := "chirp is too long"
-		res, err :=json.Marshal(response{Error: &errMsg})
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			fmt.Println(err)
-			return
-		}
-		w.Write(res)
+		handleRequestErrors(w, "chirp is too long", http.StatusBadRequest)
 		return
 	}
 
@@ -72,21 +43,45 @@ func ValidateChirp(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func cleanChirp(msg string) string {
-	badWords:= map[string]struct{}{
-		"kerfuffle": {},
-		"sharbert": {},
-		"fornax": {},
+func (cfg *ApiConfig) CreateUser(w http.ResponseWriter, r *http.Request) {
+	decoder := json.NewDecoder(r.Body)
+	var req createUserRequest
+	err := decoder.Decode(&req)
+	if err != nil {
+		handleRequestErrors(w, "invalid json", http.StatusBadRequest)
+		return
 	}
 
-	msgWords := strings.Split(msg, " ")
-
-	for i, word := range msgWords {
-		lowercase := strings.ToLower(word)
-		if _, found := badWords[lowercase]; found {
-			msgWords[i] = "****"
-		}
+	if req.Email == "" {
+		handleRequestErrors(w, "email is required", http.StatusBadRequest)
+		return
 	}
 
-	return strings.Join(msgWords, " ")
+	if !validateEmail(req.Email) {
+		handleRequestErrors(w, "email is invalid", http.StatusBadRequest)
+		return
+	}
+
+	user, err := cfg.DbQueries.CreateUser(r.Context(), req.Email)
+	if err != nil {
+		handleRequestErrors(w, "error creating user", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.Header().Set("Cache-Control", "no-cache")
+	w.WriteHeader(http.StatusCreated)
+
+	res, err := json.Marshal(createUserResponse{
+		ID: user.ID.String(), 
+		CreatedAt: user.CreatedAt.Format(time.RFC3339),
+		UpdatedAt: user.UpdatedAt.Format(time.RFC3339),
+		Email: user.Email,
+	})
+	if err != nil {
+		handleRequestErrors(w, "error marshalling JSON", http.StatusInternalServerError)
+		return
+	}
+
+	w.Write(res)
 }
