@@ -8,7 +8,8 @@ import (
 
 type ApiConfig struct {
 	FileServerHits atomic.Int32
-	DbQueries *database.Queries
+	DbQueries      *database.Queries
+	Environment    string
 }
 
 type chirp struct {
@@ -25,8 +26,8 @@ type createUserRequest struct {
 }
 
 type createUserResponse struct {
-	ID    string `json:"id"`
+	ID        string `json:"id"`
 	CreatedAt string `json:"created_at"`
 	UpdatedAt string `json:"updated_at"`
-	Email string `json:"email"`
+	Email     string `json:"email"`
 }

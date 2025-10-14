@@ -65,6 +65,7 @@ func (cfg *ApiConfig) CreateUser(w http.ResponseWriter, r *http.Request) {
 	user, err := cfg.DbQueries.CreateUser(r.Context(), req.Email)
 	if err != nil {
 		handleRequestErrors(w, "error creating user", http.StatusInternalServerError)
+		fmt.Println(fmt.Errorf("error creating user: %s", err))
 		return
 	}
 
@@ -73,10 +74,10 @@ func (cfg *ApiConfig) CreateUser(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 
 	res, err := json.Marshal(createUserResponse{
-		ID: user.ID.String(), 
+		ID:        user.ID.String(),
 		CreatedAt: user.CreatedAt.Format(time.RFC3339),
 		UpdatedAt: user.UpdatedAt.Format(time.RFC3339),
-		Email: user.Email,
+		Email:     user.Email,
 	})
 	if err != nil {
 		handleRequestErrors(w, "error marshalling JSON", http.StatusInternalServerError)

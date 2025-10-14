@@ -26,7 +26,15 @@ func (cfg *ApiConfig) ServeMetrics(w http.ResponseWriter, r *http.Request) {
 }
 
 func (cfg *ApiConfig) ResetMetrics(w http.ResponseWriter, r *http.Request) {
-	_ = r
+	if cfg.Environment == "dev" {
+		err := cfg.DbQueries.DeleteAllUsers(r.Context())
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			fmt.Println(err)
+			return
+		}
+	}
+	
 	w.WriteHeader(http.StatusOK)
 	cfg.FileServerHits.Store(0)
 }

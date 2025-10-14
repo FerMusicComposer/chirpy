@@ -26,6 +26,7 @@ func main() {
 
 	cfg := &handlers.ApiConfig{}
 	cfg.DbQueries = dbQueries
+	cfg.Environment = os.Getenv("PLATFORM")
 
 	mux := http.NewServeMux()
 	server := &http.Server{
@@ -37,7 +38,7 @@ func main() {
 	mux.Handle("/app/assets/", cfg.WithMetrics(http.HandlerFunc(handlers.ServeAppAssets)))
 	mux.HandleFunc("GET /api/healthz", handlers.GetHealthz)
 	mux.HandleFunc("POST /api/validate_chirp", handlers.ValidateChirp)
-	mux.HandleFunc("POST /api/user", cfg.CreateUser)
+	mux.HandleFunc("POST /api/users", cfg.CreateUser)
 	mux.HandleFunc("GET /admin/metrics", http.HandlerFunc(cfg.ServeMetrics))
 	mux.HandleFunc("POST /admin/reset", http.HandlerFunc(cfg.ResetMetrics))
 

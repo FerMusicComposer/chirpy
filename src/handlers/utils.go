@@ -9,16 +9,16 @@ import (
 )
 
 func handleRequestErrors(w http.ResponseWriter, errMsg string, status int) {
-		w.Header().Set("Content-Type", "application/json; charset=utf-8")
-		w.Header().Set("Cache-Control", "no-cache")
-		w.WriteHeader(status)
-		res, err := json.Marshal(response{Error: &errMsg})
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			fmt.Println(err)
-			return
-		}
-		w.Write(res)
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.Header().Set("Cache-Control", "no-cache")
+	w.WriteHeader(status)
+	res, err := json.Marshal(response{Error: &errMsg})
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Println(err)
+		return
+	}
+	w.Write(res)
 }
 
 func cleanChirp(msg string) string {
