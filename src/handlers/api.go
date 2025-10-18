@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"net/http"
 	"time"
+
+	"github.com/FerMusicComposer/chirpy/internal/database"
+	"github.com/google/uuid"
 )
 
 func GetHealthz(w http.ResponseWriter, r *http.Request) {
@@ -14,33 +17,63 @@ func GetHealthz(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("OK"))
 }
 
-func ValidateChirp(w http.ResponseWriter, r *http.Request) {
+func(cfg *ApiConfig) CreateChirp(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
-	var newChirp chirp
+	newChirp := createChirpRequest{}
 	err := decoder.Decode(&newChirp)
-
 	if err != nil {
 		handleRequestErrors(w, "invalid json", http.StatusBadRequest)
 		return
 	}
 
-	if len(newChirp.Body) > 140 {
-		handleRequestErrors(w, "chirp is too long", http.StatusBadRequest)
+	newChirp.Body, err = validateChirp(newChirp.Body)
+	if err != nil {
+		handleRequestErrors(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	userId, err := uuid.Parse(newChirp.UserID)
+	if err != nil {
+		handleRequestErrors(w, "invalid user id", http.StatusBadRequest)
+		return
+	}
+
+	chirp, err := cfg.DbQueries.CreateChirp(r.Context(), database.CreateChirpParams{
+		Body: newChirp.Body,
+		UserID: userId,
+	})
+	if err != nil {
+		handleRequestErrors(w, "error creating chirp", http.StatusInternalServerError)
+		fmt.Println(fmt.Errorf("error creating chirp: %s", err))
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.Header().Set("Cache-Control", "no-cache")
-	w.WriteHeader(http.StatusOK)
-	cleanedChirp := cleanChirp(newChirp.Body)
-	res, err := json.Marshal(response{CleanedBody: &cleanedChirp})
+	w.WriteHeader(http.StatusCreated)
+	res, err := json.Marshal(createChirpResponse{
+		ID:        chirp.ID.String(),
+		CreatedAt: chirp.CreatedAt.Format(time.RFC3339),
+		UpdatedAt: chirp.UpdatedAt.Format(time.RFC3339),
+		Body:      chirp.Body,
+		UserID:    chirp.UserID.String(),
+	})
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		fmt.Println(err)
 		return
 	}
 	w.Write(res)
+}
 
+func validateChirp(body string) (string, error) {
+	if len(body) > 140 {
+		return "", fmt.Errorf("chirp is too long")
+	}
+
+	body = cleanChirp(body)
+
+	return body, nil
 }
 
 func (cfg *ApiConfig) CreateUser(w http.ResponseWriter, r *http.Request) {

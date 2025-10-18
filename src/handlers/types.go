@@ -12,9 +12,6 @@ type ApiConfig struct {
 	Environment    string
 }
 
-type chirp struct {
-	Body string `json:"body"`
-}
 
 type response struct {
 	Error       *string `json:"error,omitempty"`
@@ -30,4 +27,17 @@ type createUserResponse struct {
 	CreatedAt string `json:"created_at"`
 	UpdatedAt string `json:"updated_at"`
 	Email     string `json:"email"`
+}
+
+type createChirpRequest struct {
+	Body string `json:"body"`
+	UserID string `json:"user_id"`
+}
+
+type createChirpResponse struct {
+	ID        string `json:"id"`
+	CreatedAt string `json:"created_at"`
+	UpdatedAt string `json:"updated_at"`
+	Body      string `json:"body"`
+	UserID    string `json:"user_id"`
 }

@@ -37,7 +37,7 @@ func main() {
 	mux.Handle("/app/", cfg.WithMetrics(http.HandlerFunc(handlers.ServeAppFiles)))
 	mux.Handle("/app/assets/", cfg.WithMetrics(http.HandlerFunc(handlers.ServeAppAssets)))
 	mux.HandleFunc("GET /api/healthz", handlers.GetHealthz)
-	mux.HandleFunc("POST /api/validate_chirp", handlers.ValidateChirp)
+	mux.HandleFunc("POST /api/chirps", cfg.CreateChirp)
 	mux.HandleFunc("POST /api/users", cfg.CreateUser)
 	mux.HandleFunc("GET /admin/metrics", http.HandlerFunc(cfg.ServeMetrics))
 	mux.HandleFunc("POST /admin/reset", http.HandlerFunc(cfg.ResetMetrics))
