@@ -20,9 +20,18 @@ type response struct {
 
 type createUserRequest struct {
 	Email string `json:"email"`
+	Password string `json:"password"`
 }
 
 type createUserResponse struct {
+	ID        string `json:"id"`
+	CreatedAt string `json:"created_at"`
+	UpdatedAt string `json:"updated_at"`
+	Email     string `json:"email"`
+	password  string
+}
+
+type user struct {
 	ID        string `json:"id"`
 	CreatedAt string `json:"created_at"`
 	UpdatedAt string `json:"updated_at"`
