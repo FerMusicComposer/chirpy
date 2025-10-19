@@ -66,14 +66,35 @@ func(cfg *ApiConfig) CreateChirp(w http.ResponseWriter, r *http.Request) {
 	w.Write(res)
 }
 
-func validateChirp(body string) (string, error) {
-	if len(body) > 140 {
-		return "", fmt.Errorf("chirp is too long")
+func(cfg *ApiConfig) GetChirps(w http.ResponseWriter, r *http.Request) {
+	chirps, err := cfg.DbQueries.GetAllChirps(r.Context())
+	if err != nil {
+		handleRequestErrors(w, err.Error(), http.StatusInternalServerError)
+		fmt.Println(fmt.Errorf("error getting chirps: %s", err))
+		return
 	}
 
-	body = cleanChirp(body)
+	resp := make([]createChirpResponse, len(chirps))
+	for i, chirp := range chirps {
+		resp[i] = createChirpResponse{
+			ID:        chirp.ID.String(),
+			CreatedAt: chirp.CreatedAt.Format(time.RFC3339),
+			UpdatedAt: chirp.UpdatedAt.Format(time.RFC3339),
+			Body:      chirp.Body,
+			UserID:    chirp.UserID.String(),
+		}
+	}
 
-	return body, nil
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.Header().Set("Cache-Control", "no-cache")
+	w.WriteHeader(http.StatusOK)
+	res, err := json.Marshal(resp)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Println(err)
+		return
+	}
+	w.Write(res)
 }
 
 func (cfg *ApiConfig) CreateUser(w http.ResponseWriter, r *http.Request) {

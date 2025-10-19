@@ -44,3 +44,11 @@ func validateEmail(email string) bool {
 	regex := regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`)
 	return regex.MatchString(email)
 }
+
+func validateChirp(body string) (string, error) {
+	if len(body) > 140 {
+		return "", fmt.Errorf("chirp is too long")
+	}
+	body = cleanChirp(body)
+	return body, nil
+}
