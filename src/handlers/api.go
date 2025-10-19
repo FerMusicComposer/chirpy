@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -89,6 +90,39 @@ func(cfg *ApiConfig) GetChirps(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Cache-Control", "no-cache")
 	w.WriteHeader(http.StatusOK)
 	res, err := json.Marshal(resp)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Println(err)
+		return
+	}
+	w.Write(res)
+}
+
+func (cfg *ApiConfig) GetChirp(w http.ResponseWriter, r *http.Request) {
+	chirpId := r.PathValue("id")
+
+	chirp, err := cfg.DbQueries.GetChirp(r.Context(), uuid.MustParse(chirpId))
+	if err != nil {
+		if err == sql.ErrNoRows {
+			handleRequestErrors(w, "chirp not found", http.StatusNotFound)
+			return
+		}
+
+		handleRequestErrors(w, err.Error(), http.StatusInternalServerError)
+		fmt.Println(fmt.Errorf("error getting chirp: %s", err))
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.Header().Set("Cache-Control", "no-cache")
+	w.WriteHeader(http.StatusOK)
+	res, err := json.Marshal(createChirpResponse{
+		ID:        chirp.ID.String(),
+		CreatedAt: chirp.CreatedAt.Format(time.RFC3339),
+		UpdatedAt: chirp.UpdatedAt.Format(time.RFC3339),
+		Body:      chirp.Body,
+		UserID:    chirp.UserID.String(),
+	})
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		fmt.Println(err)
