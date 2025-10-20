@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/FerMusicComposer/chirpy/internal/auth"
 	"github.com/FerMusicComposer/chirpy/internal/database"
 	"github.com/google/uuid"
 )
@@ -17,24 +18,34 @@ func(cfg *ApiConfig) CreateChirp(w http.ResponseWriter, r *http.Request) {
 	err := decoder.Decode(&newChirp)
 	if err != nil {
 		handleRequestErrors(w, "invalid json", http.StatusBadRequest)
+		fmt.Println(fmt.Errorf("error decoding json: %s", err))
 		return
 	}
 
 	newChirp.Body, err = validateChirp(newChirp.Body)
 	if err != nil {
 		handleRequestErrors(w, err.Error(), http.StatusBadRequest)
+		fmt.Println(fmt.Errorf("error validating chirp: %s", err))
 		return
 	}
 
-	userId, err := uuid.Parse(newChirp.UserID)
+	token, err := auth.GetBearerToken(r.Header)
 	if err != nil {
-		handleRequestErrors(w, "invalid user id", http.StatusBadRequest)
+		handleRequestErrors(w, err.Error(), http.StatusBadRequest)
+		fmt.Println(fmt.Errorf("error obtaining bearer: %s", err))
+		return
+	}
+
+	jwtUserId, err := auth.ValidateJWT(token, cfg.JWTSecret)
+	if err != nil {
+		handleRequestErrors(w, "unauthorized", http.StatusUnauthorized)
+		fmt.Println(fmt.Errorf("error validating jwt: %s", err))
 		return
 	}
 
 	chirp, err := cfg.DbQueries.CreateChirp(r.Context(), database.CreateChirpParams{
 		Body: newChirp.Body,
-		UserID: userId,
+		UserID: jwtUserId,
 	})
 	if err != nil {
 		handleRequestErrors(w, "error creating chirp", http.StatusInternalServerError)

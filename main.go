@@ -27,6 +27,7 @@ func main() {
 	cfg := &handlers.ApiConfig{}
 	cfg.DbQueries = dbQueries
 	cfg.Environment = os.Getenv("PLATFORM")
+	cfg.JWTSecret = os.Getenv("JWT_SECRET")
 
 	mux := http.NewServeMux()
 	server := &http.Server{
