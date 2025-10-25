@@ -13,31 +13,33 @@ type ApiConfig struct {
 	JWTSecret      string
 }
 
-
 type response struct {
 	Error       *string `json:"error,omitempty"`
 	CleanedBody *string `json:"cleaned_body,omitempty"`
 }
 
 type loginRequest struct {
-	Email string `json:"email"`
-	Password string `json:"password"`
-	ExpiresInSeconds int `json:"expires_in_seconds,omitempty"`
+	Email            string `json:"email"`
+	Password         string `json:"password"`
 }
 
 type loginResponse struct {
-	ID        string `json:"id"`
-	CreatedAt string `json:"created_at"`
-	UpdatedAt string `json:"updated_at"`
-	Email     string `json:"email"`
-	Token     string `json:"token"`
+	ID           string `json:"id"`
+	CreatedAt    string `json:"created_at"`
+	UpdatedAt    string `json:"updated_at"`
+	Email        string `json:"email"`
+	Token        string `json:"token"`
+	RefreshToken string `json:"refresh_token"`
+}
+
+type refreshTokenResponse struct {
+	Token string `json:"token"`
 }
 
 type createUserRequest struct {
-	Email string `json:"email"`
+	Email    string `json:"email"`
 	Password string `json:"password"`
 }
-
 
 type createUserResponse struct {
 	ID        string `json:"id"`
@@ -47,7 +49,7 @@ type createUserResponse struct {
 }
 
 type createChirpRequest struct {
-	Body string `json:"body"`
+	Body   string `json:"body"`
 	UserID string `json:"user_id"`
 }
 

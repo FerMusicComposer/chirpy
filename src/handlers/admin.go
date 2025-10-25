@@ -34,7 +34,7 @@ func (cfg *ApiConfig) ResetMetrics(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	
+
 	w.WriteHeader(http.StatusOK)
 	cfg.FileServerHits.Store(0)
 }

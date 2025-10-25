@@ -1,6 +1,8 @@
 package auth
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"net/http"
@@ -32,12 +34,11 @@ func CheckPasswordHash(password, hash string) (bool, error) {
 
 func MakeJWT(userId uuid.UUID, tokenSecret string, expiresIn time.Duration) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.RegisteredClaims{
-		Issuer: "chirpy",
-		IssuedAt: jwt.NewNumericDate(time.Now().UTC()),
+		Issuer:    "chirpy",
+		IssuedAt:  jwt.NewNumericDate(time.Now().UTC()),
 		ExpiresAt: jwt.NewNumericDate(time.Now().UTC().Add(expiresIn)),
-		Subject: userId.String(),
+		Subject:   userId.String(),
 	})
-	
 
 	tokenString, err := token.SignedString([]byte(tokenSecret))
 	if err != nil {
@@ -90,6 +91,13 @@ func GetBearerToken(headers http.Header) (string, error) {
 	if token == "" {
 		return "", errors.New("malformed authorization header: token is missing")
 	}
-	
+
 	return token, nil
+}
+
+func MakeRefreshToken() (string, error) {
+	key := make([]byte, 32)
+	rand.Read(key)
+
+	return hex.EncodeToString(key), nil
 }

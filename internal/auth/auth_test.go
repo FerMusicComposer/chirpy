@@ -124,7 +124,7 @@ func TestInvalidJWT(t *testing.T) {
 func TestExpiredJWT(t *testing.T) {
 	tokenSecret := "a-very-secure-secret-key"
 	userId := uuid.New()
-	
+
 	// Create a token that expired 1 hour ago
 	expiredToken, err := MakeJWT(userId, tokenSecret, -time.Hour)
 	if err != nil {

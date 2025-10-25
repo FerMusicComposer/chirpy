@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/FerMusicComposer/chirpy/internal/auth"
+	"github.com/FerMusicComposer/chirpy/internal/database"
 )
 
 func GetHealthz(w http.ResponseWriter, r *http.Request) {
@@ -25,7 +26,7 @@ func (cfg *ApiConfig) Login(w http.ResponseWriter, r *http.Request) {
 		handleRequestErrors(w, "invalid json", http.StatusBadRequest)
 		return
 	}
-	
+
 	if req.Email == "" {
 		handleRequestErrors(w, "email is required", http.StatusBadRequest)
 		return
@@ -55,17 +56,28 @@ func (cfg *ApiConfig) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var expirationTime time.Duration
-	if req.ExpiresInSeconds == 0 || req.ExpiresInSeconds > 3600 {
-		expirationTime = time.Hour
-	} else {
-		expirationTime = time.Second * time.Duration(req.ExpiresInSeconds)
-	}
-
-	token, err := auth.MakeJWT(user.ID, cfg.JWTSecret, expirationTime)
+	token, err := auth.MakeJWT(user.ID, cfg.JWTSecret, time.Hour)
 	if err != nil {
 		handleRequestErrors(w, "something went wrong", http.StatusInternalServerError)
-		fmt.Println(fmt.Errorf("error making JWT: %s", err))
+		fmt.Println(fmt.Errorf("error generating JWT: %s", err))
+		return
+	}
+
+	refresToken, err := auth.MakeRefreshToken()
+	if err != nil {
+		handleRequestErrors(w, "something went wrong", http.StatusInternalServerError)
+		fmt.Println(fmt.Errorf("error generating refresh token: %s", err))
+		return
+	}
+
+	err = cfg.DbQueries.CreateRefreshToken(r.Context(), database.CreateRefreshTokenParams{
+		Token: refresToken,
+		UserID: user.ID,
+		ExpiresAt: time.Now().AddDate(0,0,60),
+	})
+	if err != nil {
+		handleRequestErrors(w, "something went wrong", http.StatusInternalServerError)
+		fmt.Println(fmt.Errorf("error inserting refresh token on DB: %s", err))
 		return
 	}
 
@@ -73,11 +85,12 @@ func (cfg *ApiConfig) Login(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Cache-Control", "no-cache")
 	w.WriteHeader(http.StatusOK)
 	res, err := json.Marshal(loginResponse{
-		ID: user.ID.String(),
-		CreatedAt: user.CreatedAt.Format(time.RFC3339),
-		UpdatedAt: user.UpdatedAt.Format(time.RFC3339),
-		Email: user.Email,
-		Token: token,
+		ID:           user.ID.String(),
+		CreatedAt:    user.CreatedAt.Format(time.RFC3339),
+		UpdatedAt:    user.UpdatedAt.Format(time.RFC3339),
+		Email:        user.Email,
+		Token:        token,
+		RefreshToken: refresToken,
 	})
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -85,4 +98,77 @@ func (cfg *ApiConfig) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Write(res)
+}
+
+func (cfg *ApiConfig) RefreshToken(w http.ResponseWriter, r *http.Request) {
+	token, err:= auth.GetBearerToken(r.Header)
+	if err != nil {
+		handleRequestErrors(w, err.Error(), http.StatusBadRequest)
+		fmt.Println(fmt.Errorf("error obtaining bearer: %s", err))
+		return
+	}
+
+	if token == "" {
+		handleRequestErrors(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	existingToken, err := cfg.DbQueries.GetRefreshToken(r.Context(), token)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			handleRequestErrors(w, "unauthorized", http.StatusUnauthorized)
+			return
+		}
+		handleRequestErrors(w, "something went wrong", http.StatusInternalServerError)
+		fmt.Println(fmt.Errorf("error obtaining refresh token: %s", err))
+		return
+	}
+
+	if existingToken.ExpiresAt.Before(time.Now()) || existingToken.RevokedAt.Valid {
+		handleRequestErrors(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	newJwt, err := auth.MakeJWT(existingToken.UserID, cfg.JWTSecret, time.Hour)
+	if err != nil {
+		handleRequestErrors(w, "something went wrong", http.StatusInternalServerError)
+		fmt.Println(fmt.Errorf("error generating JWT: %s", err))
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.Header().Set("Cache-Control", "no-cache")
+	w.WriteHeader(http.StatusOK)
+	res, err := json.Marshal(refreshTokenResponse{
+		Token: newJwt,
+	})
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Println(err)
+		return
+	}
+	w.Write(res)
+}
+
+func (cfg *ApiConfig) RevokeToken(w http.ResponseWriter, r *http.Request) {
+	token, err:= auth.GetBearerToken(r.Header)
+	if err != nil {
+		handleRequestErrors(w, err.Error(), http.StatusBadRequest)
+		fmt.Println(fmt.Errorf("error obtaining bearer: %s", err))
+		return
+	}
+
+	if token == "" {
+		handleRequestErrors(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	err = cfg.DbQueries.RevokeRefreshToken(r.Context(), token)
+	if err != nil {
+		handleRequestErrors(w, "something went wrong", http.StatusInternalServerError)
+		fmt.Println(fmt.Errorf("error revoking refresh token: %s", err))
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }

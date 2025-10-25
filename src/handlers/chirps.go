@@ -12,7 +12,7 @@ import (
 	"github.com/google/uuid"
 )
 
-func(cfg *ApiConfig) CreateChirp(w http.ResponseWriter, r *http.Request) {
+func (cfg *ApiConfig) CreateChirp(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 	newChirp := createChirpRequest{}
 	err := decoder.Decode(&newChirp)
@@ -44,7 +44,7 @@ func(cfg *ApiConfig) CreateChirp(w http.ResponseWriter, r *http.Request) {
 	}
 
 	chirp, err := cfg.DbQueries.CreateChirp(r.Context(), database.CreateChirpParams{
-		Body: newChirp.Body,
+		Body:   newChirp.Body,
 		UserID: jwtUserId,
 	})
 	if err != nil {
@@ -71,7 +71,7 @@ func(cfg *ApiConfig) CreateChirp(w http.ResponseWriter, r *http.Request) {
 	w.Write(res)
 }
 
-func(cfg *ApiConfig) GetChirps(w http.ResponseWriter, r *http.Request) {
+func (cfg *ApiConfig) GetChirps(w http.ResponseWriter, r *http.Request) {
 	chirps, err := cfg.DbQueries.GetAllChirps(r.Context())
 	if err != nil {
 		handleRequestErrors(w, err.Error(), http.StatusInternalServerError)

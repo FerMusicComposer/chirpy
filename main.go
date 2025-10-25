@@ -39,6 +39,8 @@ func main() {
 	mux.Handle("/app/assets/", cfg.WithMetrics(http.HandlerFunc(handlers.ServeAppAssets)))
 	mux.HandleFunc("GET /api/healthz", handlers.GetHealthz)
 	mux.HandleFunc("POST /api/login", cfg.Login)
+	mux.HandleFunc("POST /api/refresh", cfg.RefreshToken)
+	mux.HandleFunc("POST /api/revoke", cfg.RevokeToken)
 	mux.HandleFunc("POST /api/chirps", cfg.CreateChirp)
 	mux.HandleFunc("GET /api/chirps", cfg.GetChirps)
 	mux.HandleFunc("GET /api/chirps/{id}", cfg.GetChirp)

@@ -42,7 +42,7 @@ func (cfg *ApiConfig) CreateUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	user, err := cfg.DbQueries.CreateUser(r.Context(), database.CreateUserParams{
-		Email: req.Email,
+		Email:          req.Email,
 		HashedPassword: hashedPwd,
 	})
 	if err != nil {
