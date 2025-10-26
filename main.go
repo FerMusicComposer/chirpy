@@ -35,17 +35,27 @@ func main() {
 		Handler: mux,
 	}
 
+	// General
 	mux.Handle("/app/", cfg.WithMetrics(http.HandlerFunc(handlers.ServeAppFiles)))
 	mux.Handle("/app/assets/", cfg.WithMetrics(http.HandlerFunc(handlers.ServeAppAssets)))
 	mux.HandleFunc("GET /api/healthz", handlers.GetHealthz)
+
+	// Auth
 	mux.HandleFunc("POST /api/login", cfg.Login)
 	mux.HandleFunc("POST /api/refresh", cfg.RefreshToken)
 	mux.HandleFunc("POST /api/revoke", cfg.RevokeToken)
+
+	// Chirps
 	mux.HandleFunc("POST /api/chirps", cfg.CreateChirp)
 	mux.HandleFunc("GET /api/chirps", cfg.GetChirps)
 	mux.HandleFunc("GET /api/chirps/{id}", cfg.GetChirp)
+	mux.HandleFunc("DELETE /api/chirps/{id}", cfg.DeleteChirp)
+
+	// Users
 	mux.HandleFunc("POST /api/users", cfg.CreateUser)
 	mux.HandleFunc("PUT /api/users", cfg.UpdateUser)
+
+	// Admin
 	mux.HandleFunc("GET /admin/metrics", http.HandlerFunc(cfg.ServeMetrics))
 	mux.HandleFunc("POST /admin/reset", http.HandlerFunc(cfg.ResetMetrics))
 
