@@ -71,9 +71,9 @@ func (cfg *ApiConfig) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err = cfg.DbQueries.CreateRefreshToken(r.Context(), database.CreateRefreshTokenParams{
-		Token: refresToken,
-		UserID: user.ID,
-		ExpiresAt: time.Now().AddDate(0,0,60),
+		Token:     refresToken,
+		UserID:    user.ID,
+		ExpiresAt: time.Now().AddDate(0, 0, 60),
 	})
 	if err != nil {
 		handleRequestErrors(w, "something went wrong", http.StatusInternalServerError)
@@ -101,7 +101,7 @@ func (cfg *ApiConfig) Login(w http.ResponseWriter, r *http.Request) {
 }
 
 func (cfg *ApiConfig) RefreshToken(w http.ResponseWriter, r *http.Request) {
-	token, err:= auth.GetBearerToken(r.Header)
+	token, err := auth.GetBearerToken(r.Header)
 	if err != nil {
 		handleRequestErrors(w, err.Error(), http.StatusBadRequest)
 		fmt.Println(fmt.Errorf("error obtaining bearer: %s", err))
@@ -151,7 +151,7 @@ func (cfg *ApiConfig) RefreshToken(w http.ResponseWriter, r *http.Request) {
 }
 
 func (cfg *ApiConfig) RevokeToken(w http.ResponseWriter, r *http.Request) {
-	token, err:= auth.GetBearerToken(r.Header)
+	token, err := auth.GetBearerToken(r.Header)
 	if err != nil {
 		handleRequestErrors(w, err.Error(), http.StatusBadRequest)
 		fmt.Println(fmt.Errorf("error obtaining bearer: %s", err))

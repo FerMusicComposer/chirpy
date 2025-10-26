@@ -19,8 +19,8 @@ type response struct {
 }
 
 type loginRequest struct {
-	Email            string `json:"email"`
-	Password         string `json:"password"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
 }
 
 type loginResponse struct {
@@ -37,6 +37,11 @@ type refreshTokenResponse struct {
 }
 
 type createUserRequest struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+type updateUserRequest struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
 }
