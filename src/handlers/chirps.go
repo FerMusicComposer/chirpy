@@ -76,7 +76,17 @@ func (cfg *ApiConfig) CreateChirp(w http.ResponseWriter, r *http.Request) {
 }
 
 func (cfg *ApiConfig) GetChirps(w http.ResponseWriter, r *http.Request) {
-	chirps, err := cfg.DbQueries.GetAllChirps(r.Context())
+	var chirps []database.Chirp
+	var err error
+
+	userId := r.URL.Query().Get("author_id")
+
+	if userId != "" {
+		chirps, err = cfg.DbQueries.GetChirpsByAuthor(r.Context(), uuid.MustParse(userId))
+	} else {
+		chirps, err = cfg.DbQueries.GetAllChirps(r.Context())
+	}
+
 	if err != nil {
 		handleRequestErrors(w, err.Error(), http.StatusInternalServerError)
 		fmt.Println(fmt.Errorf("error getting chirps: %s", err))
