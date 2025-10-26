@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"sort"
 	"time"
 
 	"github.com/FerMusicComposer/chirpy/internal/auth"
@@ -80,6 +81,7 @@ func (cfg *ApiConfig) GetChirps(w http.ResponseWriter, r *http.Request) {
 	var err error
 
 	userId := r.URL.Query().Get("author_id")
+	sortBy := r.URL.Query().Get("sort")
 
 	if userId != "" {
 		chirps, err = cfg.DbQueries.GetChirpsByAuthor(r.Context(), uuid.MustParse(userId))
@@ -93,6 +95,12 @@ func (cfg *ApiConfig) GetChirps(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if sortBy == "desc" {
+		sort.Slice(chirps, func(i, j int) bool {
+			return chirps[i].CreatedAt.After(chirps[j].CreatedAt)
+		})
+	}
+	
 	resp := make([]createChirpResponse, len(chirps))
 	for i, chirp := range chirps {
 		resp[i] = createChirpResponse{
