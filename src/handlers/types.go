@@ -11,6 +11,7 @@ type ApiConfig struct {
 	DbQueries      *database.Queries
 	Environment    string
 	JWTSecret      string
+	PolkaKey       string
 }
 
 type response struct {
@@ -80,6 +81,6 @@ type createChirpResponse struct {
 }
 
 type webhookRequest struct {
-	Event string `json:"event"`
-	Data eventData `json:"data"`
+	Event string    `json:"event"`
+	Data  eventData `json:"data"`
 }

@@ -28,6 +28,7 @@ func main() {
 	cfg.DbQueries = dbQueries
 	cfg.Environment = os.Getenv("PLATFORM")
 	cfg.JWTSecret = os.Getenv("JWT_SECRET")
+	cfg.PolkaKey = os.Getenv("POLKA_KEY")
 
 	mux := http.NewServeMux()
 	server := &http.Server{

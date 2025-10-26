@@ -77,14 +77,33 @@ func ValidateJWT(tonkenstring, tokenSecret string) (uuid.UUID, error) {
 }
 
 func GetBearerToken(headers http.Header) (string, error) {
+	return extractAuthToken(headers, "Bearer")
+}
+
+func GetAPIKey(headers http.Header) (string, error) {
+	return extractAuthToken(headers, "APIKey")
+}
+
+func MakeRefreshToken() (string, error) {
+	key := make([]byte, 32)
+	rand.Read(key)
+
+	return hex.EncodeToString(key), nil
+}
+
+func extractAuthToken(headers http.Header, scheme string) (string, error) {
 	authHeader := headers.Get("Authorization")
 	if authHeader == "" {
 		return "", errors.New("authorization header not found")
 	}
 
 	parts := strings.Split(authHeader, " ")
-	if len(parts) != 2 || strings.ToLower(parts[0]) != "bearer" {
+	if len(parts) != 2 {
 		return "", errors.New("malformed authorization header")
+	}
+
+	if !strings.EqualFold(parts[0], scheme) {
+		return "", fmt.Errorf("invalid auth scheme: expected %s, got %s", scheme, parts[0])
 	}
 
 	token := parts[1]
@@ -93,11 +112,4 @@ func GetBearerToken(headers http.Header) (string, error) {
 	}
 
 	return token, nil
-}
-
-func MakeRefreshToken() (string, error) {
-	key := make([]byte, 32)
-	rand.Read(key)
-
-	return hex.EncodeToString(key), nil
 }
