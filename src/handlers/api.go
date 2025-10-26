@@ -85,10 +85,15 @@ func (cfg *ApiConfig) Login(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Cache-Control", "no-cache")
 	w.WriteHeader(http.StatusOK)
 	res, err := json.Marshal(loginResponse{
-		ID:           user.ID.String(),
-		CreatedAt:    user.CreatedAt.Format(time.RFC3339),
-		UpdatedAt:    user.UpdatedAt.Format(time.RFC3339),
-		Email:        user.Email,
+		userData: userData{
+			baseModel: baseModel{
+				ID:        user.ID.String(),
+				CreatedAt: user.CreatedAt.Format(time.RFC3339),
+				UpdatedAt: user.UpdatedAt.Format(time.RFC3339),
+			},
+			Email:       user.Email,
+			IsChirpyRed: user.IsChirpyRed,
+		},
 		Token:        token,
 		RefreshToken: refresToken,
 	})

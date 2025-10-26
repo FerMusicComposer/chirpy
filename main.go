@@ -59,6 +59,9 @@ func main() {
 	mux.HandleFunc("GET /admin/metrics", http.HandlerFunc(cfg.ServeMetrics))
 	mux.HandleFunc("POST /admin/reset", http.HandlerFunc(cfg.ResetMetrics))
 
+	// Webhooks
+	mux.HandleFunc("POST /api/polka/webhooks", cfg.UpdateUserSubscriptionWebhook)
+
 	fmt.Println("Listening on port 8080")
 	server.ListenAndServe()
 

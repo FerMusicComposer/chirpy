@@ -56,10 +56,15 @@ func (cfg *ApiConfig) CreateUser(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 
 	res, err := json.Marshal(createUserResponse{
-		ID:        user.ID.String(),
-		CreatedAt: user.CreatedAt.Format(time.RFC3339),
-		UpdatedAt: user.UpdatedAt.Format(time.RFC3339),
-		Email:     user.Email,
+		userData: userData{
+			baseModel: baseModel{
+				ID:        user.ID.String(),
+				CreatedAt: user.CreatedAt.Format(time.RFC3339),
+				UpdatedAt: user.UpdatedAt.Format(time.RFC3339),
+			},
+			Email:       user.Email,
+			IsChirpyRed: user.IsChirpyRed,
+		},
 	})
 	if err != nil {
 		handleRequestErrors(w, "error marshalling JSON", http.StatusInternalServerError)
@@ -129,10 +134,15 @@ func (cfg *ApiConfig) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 
 	res, err := json.Marshal(createUserResponse{
-		ID:        user.ID.String(),
-		CreatedAt: user.CreatedAt.Format(time.RFC3339),
-		UpdatedAt: user.UpdatedAt.Format(time.RFC3339),
-		Email:     user.Email,
+		userData: userData{
+			baseModel: baseModel{
+				ID:        user.ID.String(),
+				CreatedAt: user.CreatedAt.Format(time.RFC3339),
+				UpdatedAt: user.UpdatedAt.Format(time.RFC3339),
+			},
+			Email:       user.Email,
+			IsChirpyRed: user.IsChirpyRed,
+		},
 	})
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)

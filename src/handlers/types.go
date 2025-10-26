@@ -18,16 +18,38 @@ type response struct {
 	CleanedBody *string `json:"cleaned_body,omitempty"`
 }
 
-type loginRequest struct {
+type baseModel struct {
+	ID        string `json:"id"`
+	CreatedAt string `json:"created_at"`
+	UpdatedAt string `json:"updated_at"`
+}
+
+type userCredentials struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
 }
 
+type userData struct {
+	baseModel
+	Email       string `json:"email"`
+	IsChirpyRed bool   `json:"is_chirpy_red"`
+}
+
+type chirpData struct {
+	Body   string `json:"body"`
+	UserID string `json:"user_id"`
+}
+
+type eventData struct {
+	UserId string `json:"user_id"`
+}
+
+type loginRequest struct {
+	userCredentials
+}
+
 type loginResponse struct {
-	ID           string `json:"id"`
-	CreatedAt    string `json:"created_at"`
-	UpdatedAt    string `json:"updated_at"`
-	Email        string `json:"email"`
+	userData
 	Token        string `json:"token"`
 	RefreshToken string `json:"refresh_token"`
 }
@@ -37,31 +59,27 @@ type refreshTokenResponse struct {
 }
 
 type createUserRequest struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
+	userCredentials
 }
 
 type updateUserRequest struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
+	userCredentials
 }
 
 type createUserResponse struct {
-	ID        string `json:"id"`
-	CreatedAt string `json:"created_at"`
-	UpdatedAt string `json:"updated_at"`
-	Email     string `json:"email"`
+	userData
 }
 
 type createChirpRequest struct {
-	Body   string `json:"body"`
-	UserID string `json:"user_id"`
+	chirpData
 }
 
 type createChirpResponse struct {
-	ID        string `json:"id"`
-	CreatedAt string `json:"created_at"`
-	UpdatedAt string `json:"updated_at"`
-	Body      string `json:"body"`
-	UserID    string `json:"user_id"`
+	baseModel
+	chirpData
+}
+
+type webhookRequest struct {
+	Event string `json:"event"`
+	Data eventData `json:"data"`
 }

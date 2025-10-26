@@ -57,11 +57,15 @@ func (cfg *ApiConfig) CreateChirp(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Cache-Control", "no-cache")
 	w.WriteHeader(http.StatusCreated)
 	res, err := json.Marshal(createChirpResponse{
-		ID:        chirp.ID.String(),
-		CreatedAt: chirp.CreatedAt.Format(time.RFC3339),
-		UpdatedAt: chirp.UpdatedAt.Format(time.RFC3339),
-		Body:      chirp.Body,
-		UserID:    chirp.UserID.String(),
+		baseModel: baseModel{
+			ID:        chirp.ID.String(),
+			CreatedAt: chirp.CreatedAt.Format(time.RFC3339),
+			UpdatedAt: chirp.UpdatedAt.Format(time.RFC3339),
+		},
+		chirpData: chirpData{
+			Body:   chirp.Body,
+			UserID: chirp.UserID.String(),
+		},
 	})
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -82,12 +86,15 @@ func (cfg *ApiConfig) GetChirps(w http.ResponseWriter, r *http.Request) {
 	resp := make([]createChirpResponse, len(chirps))
 	for i, chirp := range chirps {
 		resp[i] = createChirpResponse{
-			ID:        chirp.ID.String(),
-			CreatedAt: chirp.CreatedAt.Format(time.RFC3339),
-			UpdatedAt: chirp.UpdatedAt.Format(time.RFC3339),
-			Body:      chirp.Body,
-			UserID:    chirp.UserID.String(),
-		}
+			baseModel: baseModel{
+				ID:        chirp.ID.String(),
+				CreatedAt: chirp.CreatedAt.Format(time.RFC3339),
+				UpdatedAt: chirp.UpdatedAt.Format(time.RFC3339),
+			},
+			chirpData: chirpData{
+				Body:   chirp.Body,
+				UserID: chirp.UserID.String(),
+			}}
 	}
 
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
@@ -121,11 +128,15 @@ func (cfg *ApiConfig) GetChirp(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Cache-Control", "no-cache")
 	w.WriteHeader(http.StatusOK)
 	res, err := json.Marshal(createChirpResponse{
-		ID:        chirp.ID.String(),
-		CreatedAt: chirp.CreatedAt.Format(time.RFC3339),
-		UpdatedAt: chirp.UpdatedAt.Format(time.RFC3339),
-		Body:      chirp.Body,
-		UserID:    chirp.UserID.String(),
+		baseModel: baseModel{
+			ID:        chirp.ID.String(),
+			CreatedAt: chirp.CreatedAt.Format(time.RFC3339),
+			UpdatedAt: chirp.UpdatedAt.Format(time.RFC3339),
+		},
+		chirpData: chirpData{
+			Body:   chirp.Body,
+			UserID: chirp.UserID.String(),
+		},
 	})
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
